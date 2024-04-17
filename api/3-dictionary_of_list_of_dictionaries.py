@@ -1,21 +1,30 @@
 #!/usr/bin/python3
-"""
-Given a specific API, returns information about the user's TODO list progress
-"""
+"""Module to create JSON of all employees tasks"""
 import json
 import requests
-from sys import argv
 
-if __name__ == "__main__":
-    url = "https://jsonplaceholder.typicode.com/users"
-    response = requests.get(url)
-    users = response.json()
-    url = "https://jsonplaceholder.typicode.com/todos"
-    response = requests.get(url)
-    todos = response.json()
-    with open("todo_all_employees.json", "w") as jsonfile:
-        json.dump({user.get("id"): [{"task": todo.get("title"),
-                                     "completed": todo.get("completed"),
-                                     "username": user.get("username")} for todo in todos
-                                    if user.get("id") == todo.get("userId")]
-                  for user in users}, jsonfile)
+EMPLOYEE_DATA = requests.get(
+    f'https://jsonplaceholder.typicode.com/users').json()
+
+todo_DATA = requests.get(
+    f'https://jsonplaceholder.typicode.com/todos').json()
+
+USER_DATA = {}
+
+with open('todo_all_employees.json', 'w') as jsonfile:
+    for employees in EMPLOYEE_DATA:
+        USER_ID = employees.get("id")
+        USERNAME = employees.get("username")
+
+        USER_DATA[USER_ID] = []
+
+        for tasks in todo_DATA:
+            if tasks.get("userId") == USER_ID:
+                task_data = {
+                    "username": USERNAME,
+                    "task": tasks.get("title"),
+                    "completed": tasks.get("completed")
+                }
+                USER_DATA[USER_ID].append(task_data)
+
+    json.dump(USER_DATA, jsonfile)
